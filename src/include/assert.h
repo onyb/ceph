@@ -28,13 +28,6 @@ namespace ceph {
 struct BackTrace;
 #endif
 
-
-#ifdef HAVE_STATIC_CAST
-# define __CEPH_ASSERT_VOID_CAST static_cast<void>
-#else
-# define __CEPH_ASSERT_VOID_CAST (void)
-#endif
-
 /*
  * For GNU, test specific version features. Otherwise (e.g. LLVM) we'll use
  * the defaults selected below.
@@ -76,12 +69,12 @@ extern void __ceph_assert_warn(const char *assertion, const char *file, int line
 
 #define ceph_assert(expr)							\
   ((expr)								\
-   ? __CEPH_ASSERT_VOID_CAST (0)					\
+   ? static_cast (0)					\
    : __ceph_assert_fail (__STRING(expr), __FILE__, __LINE__, __CEPH_ASSERT_FUNCTION))
 
 #define assert_warn(expr)							\
   ((expr)								\
-   ? __CEPH_ASSERT_VOID_CAST (0)					\
+   ? static_cast (0)					\
    : __ceph_assert_warn (__STRING(expr), __FILE__, __LINE__, __CEPH_ASSERT_FUNCTION))
 
 /*
@@ -94,7 +87,7 @@ extern void __ceph_assert_warn(const char *assertion, const char *file, int line
 		__ceph_assert_warn(__STRING(expr), __FILE__, __LINE__, __ASSERT_FUNCTION); \
 	}								\
 	((expr)								\
-	? __CEPH_ASSERT_VOID_CAST (0)					\
+	? static_cast (0)					\
 	: __ceph_assert_fail (__STRING(expr), __FILE__, __LINE__, __ASSERT_FUNCTION)); \
   } while (0)
 #endif
@@ -139,12 +132,12 @@ using namespace ceph;
 
 #define assert(expr)							\
   ((expr)								\
-   ? __CEPH_ASSERT_VOID_CAST (0)					\
+   ? static_cast (0)					\
    : __ceph_assert_fail (__STRING(expr), __FILE__, __LINE__, __CEPH_ASSERT_FUNCTION))
 
 // Named by analogy with printf.  Along with an expression, takes a format
 // string and parameters which are printed if the assertion fails.
 #define assertf(expr, ...)                  \
   ((expr)								\
-   ? __CEPH_ASSERT_VOID_CAST (0)					\
+   ? static_cast (0)					\
    : __ceph_assertf_fail (__STRING(expr), __FILE__, __LINE__, __CEPH_ASSERT_FUNCTION, __VA_ARGS__))
