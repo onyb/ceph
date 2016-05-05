@@ -1,3 +1,6 @@
+add_library(rbd_test_mock STATIC mock/MockImageCtx.cc)
+set_target_properties(rbd_test_mock PROPERTIES COMPILE_FLAGS ${UNITTEST_CXX_FLAGS})
+
 set(librbd_test
   test_fixture.cc
   test_support.cc

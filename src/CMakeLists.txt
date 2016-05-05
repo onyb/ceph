@@ -408,38 +408,7 @@ set(osdc_rbd_files
 add_library(osdc_rbd_objs OBJECT ${osdc_rbd_files})
 add_library(osdc STATIC ${osdc_files} $<TARGET_OBJECTS:osdc_rbd_objs>)
 
-set(librados_srcs
-  librados/librados.cc
-  librados/RadosClient.cc
-  librados/IoCtxImpl.cc
-  librados/snap_set_diff.cc
-  librados/RadosXattrIter.cc
-  )
-add_library(librados ${CEPH_SHARED} ${librados_srcs}
-  $<TARGET_OBJECTS:cls_references_objs>
-  $<TARGET_OBJECTS:common_util_obj>)
-add_dependencies(librados osdc)
-# LINK_PRIVATE instead of PRIVATE is used to backward compatibility with cmake 2.8.11
-target_link_libraries(librados LINK_PRIVATE osdc osd os global common cls_lock_client
-  ${BLKID_LIBRARIES} ${CRYPTO_LIBS} ${EXTRALIBS})
-if(${ENABLE_SHARED})
-  set_target_properties(librados PROPERTIES OUTPUT_NAME rados VERSION 2.0.0
-    SOVERSION 2)
-endif(${ENABLE_SHARED})
-
-add_library(librados_api STATIC common/buffer.cc librados/librados.cc)
-
-install(FILES include/rados/librados.h
-  include/rados/rados_types.h
-  include/rados/rados_types.hpp
-  include/rados/librados.hpp
-  include/buffer.h
-  include/buffer_fwd.h
-  include/page.h
-  include/crc32c.h
-  DESTINATION include/rados)
-install(TARGETS librados DESTINATION lib)
-
+add_subdirectory(librados)
 add_subdirectory(libradosstriper)
 
 add_executable(ceph_scratchtool tools/scratchtool.c)

@@ -5,8 +5,8 @@ set(rbd_mirror_test_srcs
   test_ImageSync.cc
   test_fixture.cc
   )
-add_library(rbd_mirror STATIC ${rbd_mirror_test_srcs})
-set_target_properties(rbd_mirror PROPERTIES COMPILE_FLAGS
+add_library(rbd_mirror_test STATIC ${rbd_mirror_test_srcs})
+set_target_properties(rbd_mirror_test PROPERTIES COMPILE_FLAGS
   ${UNITTEST_CXX_FLAGS})
 
 add_executable(unittest_rbd_mirror EXCLUDE_FROM_ALL
@@ -26,17 +26,18 @@ add_ceph_unittest(unittest_rbd_mirror ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/unittest
 set_target_properties(unittest_rbd_mirror PROPERTIES COMPILE_FLAGS
   ${UNITTEST_CXX_FLAGS})
 target_link_libraries(unittest_rbd_mirror
-  rbd_mirror
+  rbd_mirror_test
+  rbd_test_mock
   rados_test_stub
   rbd_mirror_internal
   rbd_internal
   rbd_api
   journal
+  librados_internal
   cls_rbd_client
   cls_lock_client
   cls_journal_client
   rbd_types
-  librados
   osdc
   global
   radostest
