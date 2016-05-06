@@ -10,3 +10,14 @@
   explicitly specifies a value of 0 for this option you will need to
   change it to a negative value (e.g., -1) to preserve the current
   behavior.
+
+* If you have manually specified the monitor user rocksdb via the
+  ``mon keyvaluedb = rocksdb`` option, you will need to manually add a file
+  to the mon data directory to preserve this option::
+
+     echo rocksdb > /var/lib/ceph/mon/ceph-`hostname`/kv_backend
+
+  New monitors will now use rocksdb by default, but if that file is
+  not present, existing monitors will use leveldb.  The ``mon keyvaluedb`` option
+  now only affects the backend chosen when a monitor is created.
+

@@ -936,7 +936,7 @@ void OSDService::forget_peer_epoch(int peer, epoch_t as_of)
 }
 
 bool OSDService::should_share_map(entity_name_t name, Connection *con,
-                                  epoch_t epoch, OSDMapRef& osdmap,
+                                  epoch_t epoch, const OSDMapRef& osdmap,
                                   const epoch_t *sent_epoch_p)
 {
   bool should_send = false;
@@ -3020,10 +3020,6 @@ void OSD::add_newly_split_pg(PG *pg, PG::RecoveryCtx *rctx)
   service.pg_add_epoch(pg->info.pgid, pg->get_osdmap()->get_epoch());
 
   dout(10) << "Adding newly split pg " << *pg << dendl;
-  vector<int> up, acting;
-  pg->get_osdmap()->pg_to_up_acting_osds(pg->info.pgid.pgid, up, acting);
-  int role = OSDMap::calc_pg_role(service.whoami, acting);
-  pg->set_role(role);
   pg->reg_next_scrub();
   pg->handle_loaded(rctx);
   pg->write_if_dirty(*(rctx->transaction));
@@ -3304,7 +3300,10 @@ void OSD::load_pgs()
       up_primary,
       primary);
     int role = OSDMap::calc_pg_role(whoami, pg->acting);
-    pg->set_role(role);
+    if (pg->pool.info.is_replicated() || role == pg->pg_whoami.shard)
+      pg->set_role(role);
+    else
+      pg->set_role(-1);
 
     pg->reg_next_scrub();
 
@@ -3523,7 +3522,6 @@ void OSD::handle_pg_peering_evt(
     vector<int> up, acting;
     osdmap->pg_to_up_acting_osds(
       pgid.pgid, &up, &up_primary, &acting, &acting_primary);
-    int role = osdmap->calc_pg_role(whoami, acting, acting.size());
 
     pg_history_t history = orig_history;
     bool valid_history = project_pg_history(
@@ -3555,6 +3553,10 @@ void OSD::handle_pg_peering_evt(
       const pg_pool_t* pp = osdmap->get_pg_pool(pgid.pool());
       PG::_create(*rctx.transaction, pgid, pgid.get_split_bits(pp->get_pg_num()));
       PG::_init(*rctx.transaction, pgid, pp);
+
+      int role = osdmap->calc_pg_role(whoami, acting, acting.size());
+      if (!pp->is_replicated() && role != pgid.shard)
+	role = -1;
 
       PG *pg = _create_lock_pg(
 	get_map(epoch),

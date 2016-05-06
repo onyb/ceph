@@ -833,6 +833,10 @@ public:
     return fsid;
   }
 
+  uint64_t estimate_objects_overhead(uint64_t num_objects) override { 
+    return num_objects * 300; //assuming per-object overhead is 300 bytes
+  }
+
   objectstore_perf_stat_t get_cur_stats() override {
     return objectstore_perf_stat_t();
   }
@@ -886,6 +890,10 @@ private:
 		   uint64_t offset, uint64_t length,
 		   uint32_t fadvise_flags,
 		   bool allow_overlay,
+		   uint64_t *alloc_offset,
+		   uint64_t *alloc_length,
+		   uint64_t *cow_head_extent,
+		   uint64_t *cow_tail_extent,
 		   uint64_t *rmw_cow_head,
 		   uint64_t *rmw_cow_tail);
   int _do_write(TransContext *txc,
