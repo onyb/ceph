@@ -50,7 +50,7 @@ add_executable(ceph_test_rbd_mirror
 set_target_properties(ceph_test_rbd_mirror PROPERTIES COMPILE_FLAGS
   ${UNITTEST_CXX_FLAGS})
 target_link_libraries(ceph_test_rbd_mirror
-  rbd_mirror
+  rbd_mirror_test
   rados_test_stub
   rbd_mirror_internal
   rbd_internal

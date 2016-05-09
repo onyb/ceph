@@ -18,7 +18,7 @@ add_library(librados
   )
 #add_dependencies(librados osdc)
 # LINK_PRIVATE instead of PRIVATE is used to backward compatibility with cmake 2.8.11
-target_link_libraries(librados LINK_PRIVATE rados_internal cls_lock_client osdc common pthread ${CRYPTO_LIBS} {EXTRALIBS})
+target_link_libraries(librados LINK_PRIVATE librados_internal cls_lock_client osdc common pthread ${CRYPTO_LIBS} {EXTRALIBS})
 #osdc osd os global common cls_lock_client
 #${BLKID_LIBRARIES} ${CRYPTO_LIBS} ${EXTRALIBS})
 if(${ENABLE_SHARED})
