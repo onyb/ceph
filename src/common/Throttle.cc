@@ -379,7 +379,7 @@ std::chrono::duration<double> BackoffThrottle::get(uint64_t c)
   while (((start + delay) > std::chrono::system_clock::now()) ||
 	 !((max == 0) || (current == 0) || ((current + c) <= max))) {
     assert(ticket == waiters.begin());
-    (*ticket)->wait_until(l, start + delay);
+    (*ticket)->wait_for(l, delay);
     delay = _get_delay(c);
   }
   waiters.pop_front();
