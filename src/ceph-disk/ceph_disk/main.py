@@ -31,7 +31,6 @@ import platform
 import re
 import subprocess
 import stat
-import six
 import sys
 import tempfile
 import uuid
@@ -4092,7 +4091,7 @@ def list_devices():
 
     uuid_map = {}
     space_map = {}
-    for base, parts in sorted(six.iteritems(partmap)):
+    for base, parts in sorted(partmap.items()):
         for p in parts:
             dev = get_dev_path(p)
             part_uuid = get_partition_uuid(dev)
@@ -4131,7 +4130,7 @@ def list_devices():
               str(uuid_map) + ", space_map = " + str(space_map))
 
     devices = []
-    for base, parts in sorted(six.iteritems(partmap)):
+    for base, parts in sorted(partmap.items()):
         if parts:
             disk = {'path': get_dev_path(base)}
             partitions = []

@@ -19,9 +19,12 @@ import shutil
 import subprocess
 import tempfile
 import unittest
-import six
-from six.moves import builtins
 from ceph_disk import main
+
+try:
+    import builtins
+except:
+    import __builtin__ as builtins
 
 
 def fail_to_mount(dev, fstype, options):
@@ -149,7 +152,7 @@ class TestCephDisk(object):
             main.PTYPE['plain']['osd']['ready']: 'plain',
             main.PTYPE['luks']['osd']['ready']: 'luks',
         }
-        for (ptype, type) in six.iteritems(ptype2type):
+        for (ptype, type) in ptype2type.items():
             for holders in ((), ("dm_0",), ("dm_0", "dm_1")):
                 dev = {
                     'dmcrypt': {
@@ -177,7 +180,7 @@ class TestCephDisk(object):
             main.PTYPE['plain']['journal']['ready']: 'plain',
             main.PTYPE['luks']['journal']['ready']: 'luks',
         }
-        for (ptype, type) in six.iteritems(ptype2type):
+        for (ptype, type) in ptype2type.items():
             for holders in ((), ("dm_0",)):
                 dev = {
                     'path': '/dev/Xda2',
@@ -316,7 +319,7 @@ class TestCephDisk(object):
             main.PTYPE['plain']['osd']['ready']: 'plain',
             main.PTYPE['luks']['osd']['ready']: 'LUKS',
         }
-        for (partition_type, type) in six.iteritems(partition_type2type):
+        for (partition_type, type) in partition_type2type.items():
             #
             # dmcrypt data partition with one holder
             #
