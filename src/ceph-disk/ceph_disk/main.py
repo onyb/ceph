@@ -326,11 +326,8 @@ def is_systemd():
     """
     Detect whether systemd is running
     """
-    with open('/proc/1/comm', 'r') as i:
-        for line in i:
-            if 'systemd' in line:
-                return True
-    return False
+    with open('/proc/1/comm', 'r') as f:
+        return 'systemd' in f.read()
 
 
 def is_upstart():
@@ -338,9 +335,7 @@ def is_upstart():
     Detect whether upstart is running
     """
     (out, err, _) = command(['init', '--version'])
-    if 'upstart' in out:
-        return True
-    return False
+    return 'upstart' in out
 
 
 def maybe_mkdir(*a, **kw):
@@ -363,10 +358,7 @@ def maybe_mkdir(*a, **kw):
 
 def which(executable):
     """find the location of an executable"""
-    if 'PATH' in os.environ:
-        envpath = os.environ['PATH']
-    else:
-        envpath = os.defpath
+    envpath = os.environ.get('PATH') or os.defpath
     PATH = envpath.split(os.pathsep)
 
     locations = PATH + [
