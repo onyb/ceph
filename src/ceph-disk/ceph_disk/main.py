@@ -326,7 +326,7 @@ def is_systemd():
     """
     Detect whether systemd is running
     """
-    with open('/proc/1/comm', 'r') as f:
+    with open('/proc/1/comm', 'rb') as f:
         return 'systemd' in f.read()
 
 
@@ -408,7 +408,9 @@ def command(arguments, **kwargs):
     This returns the output of the command and the return code of the
     process in a tuple: (output, returncode).
     """
-    arguments = _get_command_executable(arguments)
+
+    arguments = list(map(_bytes2str, _get_command_executable(arguments)))
+
     LOG.info('Running command: %s' % ' '.join(arguments))
     process = subprocess.Popen(
         arguments,
@@ -416,7 +418,12 @@ def command(arguments, **kwargs):
         stderr=subprocess.PIPE,
         **kwargs)
     out, err = process.communicate()
-    return out.decode(encoding='UTF-8'), err, process.returncode
+
+
+    return _bytes2str(out), _bytes2str(err), process.returncode
+
+def _bytes2str(string):
+    return string.decode('utf-8') if isinstance(string, bytes) else string
 
 
 def command_check_call(arguments):
@@ -738,14 +745,14 @@ def is_mounted(dev):
     Check if the given device is mounted.
     """
     dev = os.path.realpath(dev)
-    with open('/proc/mounts', 'r') as proc_mounts:
+    with open('/proc/mounts', 'rb') as proc_mounts:
         for line in proc_mounts:
             fields = line.split()
             if len(fields) < 3:
                 continue
             mounts_dev = fields[0]
             path = fields[1]
-            if mounts_dev.startswith('/') and os.path.exists(mounts_dev):
+            if mounts_dev.startswith(b'/') and os.path.exists(mounts_dev):
                 mounts_dev = os.path.realpath(mounts_dev)
                 if mounts_dev == dev:
                     return path
@@ -813,6 +820,8 @@ def must_be_one_line(line):
     :raises: TruncatedLineError or TooManyLinesError
     :return: Content of the line, or None if line isn't valid.
     """
+    line = _bytes2str(line)
+
     if line[-1:] != '\n':
         raise TruncatedLineError(line)
     line = line[:-1]
@@ -859,7 +868,7 @@ def write_one_line(parent, name, text):
     path = os.path.join(parent, name)
     tmp = '{path}.{pid}.tmp'.format(path=path, pid=os.getpid())
     with open(tmp, 'wb') as tmp_file:
-        tmp_file.write(text + '\n')
+        tmp_file.write(text.encode('utf-8') + b'\n')
         os.fsync(tmp_file.fileno())
     path_set_context(tmp)
     os.rename(tmp, path)
@@ -996,7 +1005,7 @@ def _check_output(args=None, **kwargs):
         error = subprocess.CalledProcessError(ret, cmd)
         error.output = out + err
         raise error
-    return out
+    return _bytes2str(out)
 
 
 def get_conf(cluster, variable):
@@ -1426,7 +1435,7 @@ def zap(dev):
         size = 33 * lba_size
         with open(dev, 'wb') as dev_file:
             dev_file.seek(-size, os.SEEK_END)
-            dev_file.write(size * '\0')
+            dev_file.write(size * b'\0')
 
         command_check_call(
             [
@@ -3765,13 +3774,13 @@ def main_activate_all(args):
 
 def is_swap(dev):
     dev = os.path.realpath(dev)
-    with open('/proc/swaps', 'r') as proc_swaps:
+    with open('/proc/swaps', 'rb') as proc_swaps:
         for line in proc_swaps.readlines()[1:]:
             fields = line.split()
             if len(fields) < 3:
                 continue
             swaps_dev = fields[0]
-            if swaps_dev.startswith('/') and os.path.exists(swaps_dev):
+            if swaps_dev.startswith(b'/') and os.path.exists(swaps_dev):
                 swaps_dev = os.path.realpath(swaps_dev)
                 if swaps_dev == dev:
                     return True
@@ -3781,7 +3790,7 @@ def is_swap(dev):
 def get_oneliner(base, name):
     path = os.path.join(base, name)
     if os.path.isfile(path):
-        with open(path, 'r') as _file:
+        with open(path, 'rb') as _file:
             return _file.readline().rstrip()
     return None
 
