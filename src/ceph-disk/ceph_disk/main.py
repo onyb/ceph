@@ -266,8 +266,8 @@ class Error(Exception):
     """
 
     def __str__(self):
-        doc = self.__doc__.strip()
-        return ': '.join([doc] + [str(a) for a in self.args])
+        doc = _bytes2str(self.__doc__.strip())
+        return ': '.join([doc] + [_bytes2str(a) for a in self.args])
 
 
 class MountError(Error):
@@ -325,7 +325,7 @@ def is_systemd():
     """
     Detect whether systemd is running
     """
-    with open('/proc/1/comm', 'rb') as f:
+    with open('/proc/1/comm', 'r') as f:
         return 'systemd' in f.read()
 
 
@@ -381,7 +381,7 @@ def _get_command_executable(arguments):
     Return the full path for an executable, raise if the executable is not
     found. If the executable has already a full path do not perform any checks.
     """
-    if arguments[0].startswith('/'):  # an absolute path
+    if os.path.isabs(arguments[0]):  # an absolute path
         return arguments
     executable = which(arguments[0])
     if not executable:
@@ -752,7 +752,7 @@ def is_mounted(dev):
                 continue
             mounts_dev = fields[0]
             path = fields[1]
-            if mounts_dev.startswith(b'/') and os.path.exists(mounts_dev):
+            if os.path.isabs(mounts_dev) and os.path.exists(mounts_dev):
                 mounts_dev = os.path.realpath(mounts_dev)
                 if mounts_dev == dev:
                     return _bytes2str(path)
@@ -1950,8 +1950,7 @@ class PrepareSpace(object):
                       ' (ceph-osd will resize and allocate)',
                       self.name,
                       getattr(self.args, self.name))
-            with open(getattr(self.args, self.name), 'wb') as space_file:
-                pass
+            space_file = open(getattr(self.args, self.name), 'wb')
 
         LOG.debug('%s is file %s',
                   self.name.capitalize(),
@@ -1960,6 +1959,7 @@ class PrepareSpace(object):
                     'not the same device as the osd data' %
                     self.name)
         self.space_symlink = space_file
+        space_file.close()
 
     def prepare_device(self):
         reusing_partition = False
@@ -3043,7 +3043,7 @@ def mount_activate(
                 fstype=fstype,
                 mount_options=mount_options,
             )
-        return (cluster, osd_id)
+        return cluster, osd_id
 
     except:
         LOG.error('Failed to activate')
@@ -3088,7 +3088,7 @@ def activate_dir(path, activate_key_template, init):
                     raise Error('unable to create symlink %s -> %s'
                                 % (canonical, path))
 
-    return (cluster, osd_id)
+    return cluster, osd_id
 
 
 def find_cluster_by_uuid(_uuid):
@@ -3477,7 +3477,7 @@ def _remove_lockbox(uuid):
     command(['umount', canonical])
     for name in os.listdir(lockbox):
         path = os.path.join(lockbox, name)
-        if (os.path.islink(path) and os.readlink(path) == canonical):
+        if os.path.islink(path) and os.readlink(path) == canonical:
             os.unlink(path)
 
 
@@ -3507,7 +3507,7 @@ def destroy_lookup_device(args, predicate, description):
             else:
                 dmcrypt = False
             if predicate(partition):
-                return (dmcrypt, partition)
+                return dmcrypt, partition
     raise Error('found no device matching ', description)
 
 
@@ -3709,7 +3709,7 @@ def is_swap(dev):
             if len(fields) < 3:
                 continue
             swaps_dev = fields[0]
-            if swaps_dev.startswith(b'/') and os.path.exists(swaps_dev):
+            if os.path.isabs(swaps_dev) and os.path.exists(swaps_dev):
                 swaps_dev = os.path.realpath(swaps_dev)
                 if swaps_dev == dev:
                     return True
@@ -3748,7 +3748,7 @@ def split_dev_base_partnum(dev):
         b = block_path(dev)
         partnum = open(os.path.join(b, 'partition')).read().strip()
         base = get_partition_base(dev)
-    return (base, partnum)
+    return base, partnum
 
 
 def get_partition_type(part):
@@ -4430,7 +4430,7 @@ def make_trigger_parser(subparsers):
     trigger_parser.add_argument(
         '--sync',
         action='store_true', default=None,
-        help=('do operation synchronously; do not trigger systemd'),
+        help='do operation synchronously; do not trigger systemd',
     )
     trigger_parser.set_defaults(
         func=main_trigger,
